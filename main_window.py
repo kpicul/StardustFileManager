@@ -15,6 +15,7 @@ Summary:
 
 
 class MainWindow(QMainWindow):
+    # region Init
     def __init__(self):
         super(MainWindow, self).__init__()
         uic.loadUi('forms/main_window.ui', self)
@@ -29,6 +30,7 @@ class MainWindow(QMainWindow):
         self.btn_new_tab = self.findChild(QPushButton, 'btnNewTab')
         self.btn_back = self.findChild(QPushButton, 'btnBack')
         self.btn_forward = self.findChild(QPushButton, 'btnForward')
+        self.btn_up = self.findChild(QPushButton, 'btnUp')
 
         self.btn_forward.setEnabled(False)
         self.btn_back.setEnabled(False)
@@ -40,17 +42,21 @@ class MainWindow(QMainWindow):
         self.set_events()
 
         self.show()
+    # endregion
 
     '''
     Summary:
         Sets the events to the appropriate elements
     '''
+
+    # region ClassFunctions
     def set_events(self):
         self.file_browser_tv.doubleClicked.connect(self.on_file_browser_click)
         self.btn_new_tab.clicked.connect(self.add_new_tab)
         self.main_tab_widget.currentChanged.connect(self.on_tab_change)
         self.btn_back.clicked.connect(self.return_back)
         self.btn_forward.clicked.connect(self.return_to_future)
+        self.btn_up.clicked.connect(self.get_up)
 
     '''
     Summary:
@@ -63,6 +69,8 @@ class MainWindow(QMainWindow):
         layout = current_tab.layout()
         current_fb = layout.itemAt(0).widget()
         return current_fb
+    # endregion
+    # region Events
     '''
     Summary:
         Executes when clicking on an folder in main window. Sets the path in the path view
@@ -130,6 +138,10 @@ class MainWindow(QMainWindow):
             self.btn_back.setEnabled(False)
         self.btn_forward.setEnabled(True)
 
+    '''
+    Summary:
+        Event that executes when we press forward button
+    '''
     def return_to_future(self):
         current_fb = self.get_current_file_browser()
         current_fb.return_to_future()
@@ -138,6 +150,12 @@ class MainWindow(QMainWindow):
         else:
             self.btn_forward.setEnabled(False)
         self.btn_back.setEnabled(True)
+
+    def get_up(self):
+        current_fb = self.get_current_file_browser()
+        current_fb.get_up()
+        self.pt_file_path.setPlainText(current_fb.dir_path)
+    # endregion
 
 
 app = QApplication(sys.argv)

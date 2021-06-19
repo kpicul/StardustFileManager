@@ -39,6 +39,13 @@
         </widget>
        </item>
        <item>
+        <widget class="QPushButton" name="btnUp">
+         <property name="text">
+          <string>Up</string>
+         </property>
+        </widget>
+       </item>
+       <item>
         <widget class="QPushButton" name="btnNewTab">
          <property name="text">
           <string>New Tab</string>
@@ -76,7 +83,7 @@
      <x>0</x>
      <y>0</y>
      <width>849</width>
-     <height>30</height>
+     <height>22</height>
     </rect>
    </property>
   </widget>

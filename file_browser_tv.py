@@ -1,6 +1,7 @@
 from PyQt5.QtWidgets import QTreeView, QFileSystemModel
 from os.path import isdir
 from stack import Stack
+from string_functions import get_parent_directory
 
 '''
 Summary:
@@ -57,6 +58,10 @@ class FileBrowserTv(QTreeView):
             self.dir_path = old_path
             self.setRootIndex(self.model.setRootPath(old_path))
 
+    '''
+    Summary:
+        If we ever previously pressed back button then when we press forward it returns to the previous path
+    '''
     def return_to_future(self):
         if len(self.future) > 0:
             old_path = self.future.pop()
@@ -64,8 +69,26 @@ class FileBrowserTv(QTreeView):
             self.dir_path = old_path
             self.setRootIndex(self.model.setRootPath(old_path))
 
+    def get_up(self):
+        parent_dir = get_parent_directory(self.dir_path)
+        self.history.push(self.dir_path)
+        self.dir_path = parent_dir
+        self.setRootIndex(self.model.setRootPath(parent_dir))
+
+    '''
+    Summary:
+        Checks if it has any paths in history.
+    Returns:
+        has_history (bool): If it has any paths in history list
+    '''
     def has_history(self):
         return len(self.history) > 0
 
+    '''
+    Summary:
+        Checks if it has any paths in future list
+    Returns:
+        has_future (bool): If it has any paths in future list
+    '''
     def has_future(self):
         return len(self.future) > 0

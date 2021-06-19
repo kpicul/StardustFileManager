@@ -1,4 +1,5 @@
 import os.path
+from pathlib import Path
 
 
 """
@@ -12,3 +13,7 @@ Returns
 """
 def get_item_name(path):
     return os.path.split(path)[-1]
+
+def get_parent_directory(path):
+    full_path = Path(path)
+    return str(full_path.parent.absolute())
