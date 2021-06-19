@@ -50,6 +50,7 @@ class MainWindow(QMainWindow):
         self.btn_new_tab.clicked.connect(self.add_new_tab)
         self.main_tab_widget.currentChanged.connect(self.on_tab_change)
         self.btn_back.clicked.connect(self.return_back)
+        self.btn_forward.clicked.connect(self.return_to_future)
 
     '''
     Summary:
@@ -78,6 +79,7 @@ class MainWindow(QMainWindow):
             self.main_tab_widget.setTabText(int(index), get_item_name(current_path))
             if isdir(current_path):
                 self.btn_back.setEnabled(True)
+                self.btn_forward.setEnabled(False)
             if len(current_fb.history) == 0:
                 self.btn_back.setEnabled(False)
     '''
@@ -104,6 +106,14 @@ class MainWindow(QMainWindow):
     def on_tab_change(self):
         current_fb = self.get_current_file_browser()
         self.pt_file_path.setPlainText(current_fb.dir_path)
+        if current_fb.has_history():
+            self.btn_back.setEnabled(True)
+        else:
+            self.btn_back.setEnabled(False)
+        if current_fb.has_future():
+            self.btn_forward.setEnabled(True)
+        else:
+            self.btn_forward.setEnabled(False)
 
     '''
     Summary:
@@ -114,10 +124,20 @@ class MainWindow(QMainWindow):
     def return_back(self):
         current_fb = self.get_current_file_browser()
         current_fb.return_back()
-        if len(current_fb.history) > 0:
+        if current_fb.has_history():
             self.pt_file_path.setPlainText(current_fb.dir_path)
         else:
             self.btn_back.setEnabled(False)
+        self.btn_forward.setEnabled(True)
+
+    def return_to_future(self):
+        current_fb = self.get_current_file_browser()
+        current_fb.return_to_future()
+        if current_fb.has_future():
+            self.pt_file_path.setPlainText(current_fb.dir_path)
+        else:
+            self.btn_forward.setEnabled(False)
+        self.btn_back.setEnabled(True)
 
 
 app = QApplication(sys.argv)

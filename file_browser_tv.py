@@ -41,13 +41,31 @@ class FileBrowserTv(QTreeView):
     def on_folder_click(self, index):
         click_path = self.model.fileInfo(index).absoluteFilePath()
         if isdir(click_path):
+            self.future = Stack()
             self.history.push(self.dir_path)
             self.dir_path = click_path
             self.setRootIndex(self.model.setRootPath(click_path))
 
+    '''
+    Summary:
+        If it has history it reverts back to previous path
+    '''
     def return_back(self):
         if len(self.history) > 0:
             old_path = self.history.pop()
-            self.future.push(old_path)
+            self.future.push(self.dir_path)
             self.dir_path = old_path
             self.setRootIndex(self.model.setRootPath(old_path))
+
+    def return_to_future(self):
+        if len(self.future) > 0:
+            old_path = self.future.pop()
+            self.history.push(self.dir_path)
+            self.dir_path = old_path
+            self.setRootIndex(self.model.setRootPath(old_path))
+
+    def has_history(self):
+        return len(self.history) > 0
+
+    def has_future(self):
+        return len(self.future) > 0
