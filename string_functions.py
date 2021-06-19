@@ -1,3 +1,4 @@
+import os.path
 
 
 """
@@ -10,5 +11,4 @@ Returns
 
 """
 def get_item_name(path):
-    name_list = path.split("/")
-    return name_list[-1]
+    return os.path.split(path)[-1]

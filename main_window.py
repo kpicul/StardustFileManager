@@ -3,7 +3,8 @@ from PyQt5.QtWidgets import QMainWindow, QTabWidget, QWidget, QPlainTextEdit, QA
 from PyQt5 import uic
 from file_browser_tv import FileBrowserTv
 from string_functions import get_item_name
-# from file_browser import FileBrowserWidget
+from stack import Stack
+from os.path import isdir
 import sys
 import os
 
@@ -26,8 +27,11 @@ class MainWindow(QMainWindow):
         self.pt_file_path = self.findChild(QPlainTextEdit, 'filePath')
         self.file_browser_tv = self.findChild(FileBrowserTv, 'fileBrowserTv')
         self.btn_new_tab = self.findChild(QPushButton, 'btnNewTab')
-        self.path_index[self.first_tab] = home_folder
+        self.btn_back = self.findChild(QPushButton, 'btnBack')
+        self.btn_forward = self.findChild(QPushButton, 'btnForward')
 
+        self.btn_forward.setEnabled(False)
+        self.btn_back.setEnabled(False)
         self.file_browser_tv.set_path(home_folder)
         self.pt_file_path.setPlainText(self.file_browser_tv.dir_path)
         index = self.main_tab_widget.indexOf(self.first_tab)
@@ -45,6 +49,7 @@ class MainWindow(QMainWindow):
         self.file_browser_tv.doubleClicked.connect(self.on_file_browser_click)
         self.btn_new_tab.clicked.connect(self.add_new_tab)
         self.main_tab_widget.currentChanged.connect(self.on_tab_change)
+        self.btn_back.clicked.connect(self.return_back)
 
     '''
     Summary:
@@ -71,6 +76,10 @@ class MainWindow(QMainWindow):
             self.path_index[current_tab] = current_path
             self.pt_file_path.setPlainText(current_path)
             self.main_tab_widget.setTabText(int(index), get_item_name(current_path))
+            if isdir(current_path):
+                self.btn_back.setEnabled(True)
+            if len(current_fb.history) == 0:
+                self.btn_back.setEnabled(False)
     '''
     Summary:
         Adds new tab and sets the path to the home folder of the user
@@ -95,6 +104,20 @@ class MainWindow(QMainWindow):
     def on_tab_change(self):
         current_fb = self.get_current_file_browser()
         self.pt_file_path.setPlainText(current_fb.dir_path)
+
+    '''
+    Summary:
+        Event that executes when we press button to go back.
+        It reverts toi the previous folder in history. If there
+        is no previous folder it disables back button
+    '''
+    def return_back(self):
+        current_fb = self.get_current_file_browser()
+        current_fb.return_back()
+        if len(current_fb.history) > 0:
+            self.pt_file_path.setPlainText(current_fb.dir_path)
+        else:
+            self.btn_back.setEnabled(False)
 
 
 app = QApplication(sys.argv)
