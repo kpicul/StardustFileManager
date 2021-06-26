@@ -1,0 +1,17 @@
+TODO 26. 6. 2021 (v0.1)
+- Create the check for the correct folder name
+- Set and create all the events on the main menu
+- Set all events on the right click menu
+    * New folder
+    * New file
+    * Exit tab
+- Create and set the right click event for files and folders
+    * Open
+    * Rename
+    * Cut
+    * Paste
+    * Delete
+    * Copy
+    * Properties
+- Keyboard shortcuts
+- Help window

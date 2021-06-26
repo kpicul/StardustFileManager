@@ -1,8 +1,9 @@
 from PyQt5.QtWidgets import QMainWindow, QTabWidget, QWidget, QPlainTextEdit, QApplication, QTreeView, \
-    QFileSystemModel, QPushButton, QVBoxLayout
+    QFileSystemModel, QPushButton, QVBoxLayout, QAction
 from PyQt5 import uic
 from file_browser_tv import FileBrowserTv
-from string_functions import get_item_name
+from folder_name_dialog import FolderNameDialog
+from file_system_functions import get_item_name, get_posix_path
 from stack import Stack
 from os.path import isdir
 import sys
@@ -20,7 +21,7 @@ class MainWindow(QMainWindow):
         super(MainWindow, self).__init__()
         uic.loadUi('forms/main_window.ui', self)
 
-        home_folder = os.path.expanduser('~')
+        home_folder = get_posix_path(os.path.expanduser('~'))
 
         self.path_index = dict()
         self.main_tab_widget = self.findChild(QTabWidget, 'mainTabWidget')
@@ -32,12 +33,17 @@ class MainWindow(QMainWindow):
         self.btn_forward = self.findChild(QPushButton, 'btnForward')
         self.btn_up = self.findChild(QPushButton, 'btnUp')
 
+        self.action_exit = self.findChild(QAction, 'actionExit')
+        self.action_new_tab = self.findChild(QAction, 'actionNew_Tab')
+        self.action_new_folder = self.findChild(QAction, 'actionNew_Folder')
+
         self.btn_forward.setEnabled(False)
         self.btn_back.setEnabled(False)
         self.file_browser_tv.set_path(home_folder)
         self.pt_file_path.setPlainText(self.file_browser_tv.dir_path)
         index = self.main_tab_widget.indexOf(self.first_tab)
         self.main_tab_widget.setTabText(index, get_item_name(home_folder))
+        self.setWindowTitle(self.file_browser_tv.dir_path)
 
         self.set_events()
 
@@ -57,6 +63,10 @@ class MainWindow(QMainWindow):
         self.btn_back.clicked.connect(self.return_back)
         self.btn_forward.clicked.connect(self.return_to_future)
         self.btn_up.clicked.connect(self.get_up)
+
+        self.action_exit.triggered.connect(self.quit)
+        self.action_new_tab.triggered.connect(self.add_new_tab)
+        self.action_new_folder.triggered.connect(self.new_folder_event)
 
     '''
     Summary:
@@ -106,6 +116,7 @@ class MainWindow(QMainWindow):
         tab_name = get_item_name(default_path)
         self.path_index[tab_name] = default_path
         self.main_tab_widget.addTab(tab, tab_name)
+        self.main_tab_widget.setCurrentWidget(tab)
 
     '''
     Summary:
@@ -151,10 +162,26 @@ class MainWindow(QMainWindow):
             self.btn_forward.setEnabled(False)
         self.btn_back.setEnabled(True)
 
+    '''
+    Summary:
+        Event that executes when we press "Up" button
+    '''
     def get_up(self):
         current_fb = self.get_current_file_browser()
         current_fb.get_up()
         self.pt_file_path.setPlainText(current_fb.dir_path)
+
+    '''
+    Summary:
+        Event that executes when we press new folder action
+    '''
+    def new_folder_event(self):
+        current_fb = self.get_current_file_browser()
+        current_fb.create_new_folder_event()
+
+    def quit(self):
+        sys.exit(0)
+
     # endregion
 
 

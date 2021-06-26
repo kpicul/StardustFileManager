@@ -1,7 +1,12 @@
-from PyQt5.QtWidgets import QTreeView, QFileSystemModel
-from os.path import isdir
+import os
+
+from PyQt5.QtWidgets import QTreeView, QFileSystemModel, QMenu, QAction, QHeaderView
+from os.path import isdir, exists
+from os import makedirs
 from stack import Stack
-from string_functions import get_parent_directory
+from file_system_functions import get_parent_directory, create_new_folder
+from PyQt5.QtCore import Qt
+from folder_name_dialog import FolderNameDialog
 
 '''
 Summary:
@@ -10,13 +15,23 @@ Summary:
 
 
 class FileBrowserTv(QTreeView):
+    # region Init
     def __init__(self, parent=None):
         super().__init__(parent)
+        self.setAlternatingRowColors(True)
+        self.item_header = self.header()
+        self.item_header.setSectionResizeMode(QHeaderView.ResizeToContents)
+
         self.dir_path = ""
         self.doubleClicked.connect(self.on_folder_click)
         self.model = QFileSystemModel(self)
         self.history = Stack()
         self.future = Stack()
+
+        self.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.customContextMenuRequested.connect(self.contextMenuEvent)
+    # endregion
+    # region ClassFunctions
     '''
     Summary:
         sets the path of the file browser
@@ -32,6 +47,27 @@ class FileBrowserTv(QTreeView):
         self.setModel(file_system_model)
         self.setRootIndex(root)
 
+    '''
+        Summary:
+            Checks if it has any paths in history.
+        Returns:
+            has_history (bool): If it has any paths in history list
+        '''
+
+    def has_history(self):
+        return len(self.history) > 0
+
+    '''
+    Summary:
+        Checks if it has any paths in future list
+    Returns:
+        has_future (bool): If it has any paths in future list
+    '''
+
+    def has_future(self):
+        return len(self.future) > 0
+    # endregion
+    # region Events
     '''
     Summary:
         It executes, when clicking on folder or file. If it is folder it enters the folders, else it executes
@@ -69,6 +105,10 @@ class FileBrowserTv(QTreeView):
             self.dir_path = old_path
             self.setRootIndex(self.model.setRootPath(old_path))
 
+    '''
+    Summary:
+        Moves the path to the parent directory and loads the contents
+    '''
     def get_up(self):
         parent_dir = get_parent_directory(self.dir_path)
         self.history.push(self.dir_path)
@@ -77,18 +117,24 @@ class FileBrowserTv(QTreeView):
 
     '''
     Summary:
-        Checks if it has any paths in history.
-    Returns:
-        has_history (bool): If it has any paths in history list
+        Sets and fires the right click context menu
+    Parameters:
+        Position: position of the window
     '''
-    def has_history(self):
-        return len(self.history) > 0
+    def contextMenuEvent(self, position):
+        menu = QMenu()
+        action_new_folder = menu.addAction("New Folder")
+        action_quit = menu.addAction("Quit")
+        menu.exec_(self.viewport().mapToGlobal(position))
 
     '''
     Summary:
-        Checks if it has any paths in future list
-    Returns:
-        has_future (bool): If it has any paths in future list
+        Event that creates new window. Fires the FolderName dialog
     '''
-    def has_future(self):
-        return len(self.future) > 0
+    def create_new_folder_event(self):
+        name_dialog = FolderNameDialog()
+        name_dialog.exec_()
+        folder_name = name_dialog.get_folder_name()
+        if folder_name is not None:
+            create_new_folder(self.dir_path, folder_name)
+    # endregion
