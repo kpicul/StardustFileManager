@@ -106,6 +106,7 @@
     <addaction name="actionCopy"/>
     <addaction name="actionPaste"/>
     <addaction name="actionCut"/>
+    <addaction name="actionDelete"/>
    </widget>
    <widget class="QMenu" name="menuAbout">
     <property name="title">
@@ -166,6 +167,11 @@
   <action name="actionAbout_Stardust_FM">
    <property name="text">
     <string>About Stardust FM</string>
+   </property>
+  </action>
+  <action name="actionDelete">
+   <property name="text">
+    <string>Permamently Delete</string>
    </property>
   </action>
  </widget>

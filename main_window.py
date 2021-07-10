@@ -3,11 +3,16 @@ from PyQt5.QtWidgets import QMainWindow, QTabWidget, QWidget, QPlainTextEdit, QA
 from PyQt5 import uic
 from file_browser_tv import FileBrowserTv
 from folder_name_dialog import FolderNameDialog
-from file_system_functions import get_item_name, get_posix_path
+from file_system_functions import get_item_name, get_posix_path, copy_item, move_item
 from stack import Stack
 from os.path import isdir
+from enum import Enum
 import sys
 import os
+
+class Mode(Enum):
+    COPY = 1,
+    MOVE = 2
 
 '''
 Summary:
@@ -36,6 +41,12 @@ class MainWindow(QMainWindow):
         self.action_exit = self.findChild(QAction, 'actionExit')
         self.action_new_tab = self.findChild(QAction, 'actionNew_Tab')
         self.action_new_folder = self.findChild(QAction, 'actionNew_Folder')
+        self.action_delete = self.findChild(QAction, 'actionDelete')
+        self.action_copy = self.findChild(QAction, 'actionCopy')
+        self.action_paste = self.findChild(QAction, 'actionPaste')
+
+        self.clipboard_mode = None
+        self.copy_clipboard = []
 
         self.btn_forward.setEnabled(False)
         self.btn_back.setEnabled(False)
@@ -43,6 +54,7 @@ class MainWindow(QMainWindow):
         self.pt_file_path.setPlainText(self.file_browser_tv.dir_path)
         index = self.main_tab_widget.indexOf(self.first_tab)
         self.main_tab_widget.setTabText(index, get_item_name(home_folder))
+        self.main_tab_widget.setTabsClosable(True)
         self.setWindowTitle(self.file_browser_tv.dir_path)
 
         self.set_events()
@@ -60,6 +72,7 @@ class MainWindow(QMainWindow):
         self.file_browser_tv.doubleClicked.connect(self.on_file_browser_click)
         self.btn_new_tab.clicked.connect(self.add_new_tab)
         self.main_tab_widget.currentChanged.connect(self.on_tab_change)
+        self.main_tab_widget.tabCloseRequested.connect(self.close_tab_event)
         self.btn_back.clicked.connect(self.return_back)
         self.btn_forward.clicked.connect(self.return_to_future)
         self.btn_up.clicked.connect(self.get_up)
@@ -67,6 +80,9 @@ class MainWindow(QMainWindow):
         self.action_exit.triggered.connect(self.quit)
         self.action_new_tab.triggered.connect(self.add_new_tab)
         self.action_new_folder.triggered.connect(self.new_folder_event)
+        self.action_delete.triggered.connect(self.delete_event)
+        self.action_copy.triggered.connect(self.copy_file_event)
+        self.action_paste.triggered.connect(self.paste_event)
 
     '''
     Summary:
@@ -95,6 +111,7 @@ class MainWindow(QMainWindow):
             self.path_index[current_tab] = current_path
             self.pt_file_path.setPlainText(current_path)
             self.main_tab_widget.setTabText(int(index), get_item_name(current_path))
+            self.setWindowTitle(current_fb.dir_path)
             if isdir(current_path):
                 self.btn_back.setEnabled(True)
                 self.btn_forward.setEnabled(False)
@@ -117,22 +134,25 @@ class MainWindow(QMainWindow):
         self.path_index[tab_name] = default_path
         self.main_tab_widget.addTab(tab, tab_name)
         self.main_tab_widget.setCurrentWidget(tab)
+        self.setWindowTitle(new_file_browser.dir_path)
 
     '''
     Summary:
         Event that executes on tab change
     '''
     def on_tab_change(self):
-        current_fb = self.get_current_file_browser()
-        self.pt_file_path.setPlainText(current_fb.dir_path)
-        if current_fb.has_history():
-            self.btn_back.setEnabled(True)
-        else:
-            self.btn_back.setEnabled(False)
-        if current_fb.has_future():
-            self.btn_forward.setEnabled(True)
-        else:
-            self.btn_forward.setEnabled(False)
+        if self.main_tab_widget.count() > 0:
+            current_fb = self.get_current_file_browser()
+            self.pt_file_path.setPlainText(current_fb.dir_path)
+            self.setWindowTitle(current_fb.dir_path)
+            if current_fb.has_history():
+                self.btn_back.setEnabled(True)
+            else:
+                self.btn_back.setEnabled(False)
+            if current_fb.has_future():
+                self.btn_forward.setEnabled(True)
+            else:
+                self.btn_forward.setEnabled(False)
 
     '''
     Summary:
@@ -170,6 +190,7 @@ class MainWindow(QMainWindow):
         current_fb = self.get_current_file_browser()
         current_fb.get_up()
         self.pt_file_path.setPlainText(current_fb.dir_path)
+        self.setWindowTitle(current_fb.dir_path)
 
     '''
     Summary:
@@ -178,6 +199,41 @@ class MainWindow(QMainWindow):
     def new_folder_event(self):
         current_fb = self.get_current_file_browser()
         current_fb.create_new_folder_event()
+
+    def close_tab_event(self, index):
+        active_tab = self.main_tab_widget.widget(index)
+        active_tab.deleteLater()
+        self.main_tab_widget.removeTab(index)
+        if self.main_tab_widget.count() == 0:
+            self.quit()
+
+    def delete_event(self):
+        current_file_browser = self.get_current_file_browser()
+        current_file_browser.delete_items()
+
+    def copy_file_event(self):
+        current_file_browser = self.get_current_file_browser()
+        self.copy_clipboard = current_file_browser.get_selected_items_paths()
+        self.clipboard_mode = Mode.COPY
+
+    def move_event(self):
+        current_file_browser = self.get_current_file_browser()
+        self.copy_clipboard = current_file_browser.get_selected_items_paths()
+        self.clipboard_mode = Mode.MOVE
+
+    def paste_event(self):
+        if self.clipboard_mode is not None and len(self.copy_clipboard) > 0:
+            current_file_browser = self.get_current_file_browser()
+            current_directory_path = current_file_browser.dir_path
+            for clipboard_item_path in self.copy_clipboard:
+                if self.clipboard_mode == Mode.COPY:
+                    copy_item(clipboard_item_path, current_directory_path)
+                elif self.clipboard_mode == Mode.MOVE:
+                    move_item(clipboard_item_path, current_directory_path)
+            if self.clipboard_mode == Mode.MOVE:
+                self.clipboard_mode = None
+                self.copy_clipboard = []
+
 
     def quit(self):
         sys.exit(0)

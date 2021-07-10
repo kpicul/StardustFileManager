@@ -4,7 +4,7 @@ from PyQt5.QtWidgets import QTreeView, QFileSystemModel, QMenu, QAction, QHeader
 from os.path import isdir, exists
 from os import makedirs
 from stack import Stack
-from file_system_functions import get_parent_directory, create_new_folder
+from file_system_functions import get_parent_directory, create_new_folder, delete_item, show_error_message
 from PyQt5.QtCore import Qt
 from folder_name_dialog import FolderNameDialog
 
@@ -24,9 +24,11 @@ class FileBrowserTv(QTreeView):
 
         self.dir_path = ""
         self.doubleClicked.connect(self.on_folder_click)
+        self.clicked.connect(self.on_select)
         self.model = QFileSystemModel(self)
         self.history = Stack()
         self.future = Stack()
+        self.selected_item = None
 
         self.setContextMenuPolicy(Qt.CustomContextMenu)
         self.customContextMenuRequested.connect(self.contextMenuEvent)
@@ -66,6 +68,14 @@ class FileBrowserTv(QTreeView):
 
     def has_future(self):
         return len(self.future) > 0
+
+    def get_selected_items_paths(self):
+        selected_indexes = self.selectionModel().selectedIndexes()
+        items = []
+        for index in selected_indexes:
+            items.append(self.model.fileInfo(index).absoluteFilePath())
+        return items
+
     # endregion
     # region Events
     '''
@@ -83,6 +93,10 @@ class FileBrowserTv(QTreeView):
             self.dir_path = click_path
             self.setRootIndex(self.model.setRootPath(click_path))
 
+    def on_select(self, index):
+        click_path = self.model.fileInfo(index).absoluteFilePath()
+        if isdir(click_path):
+            self.selected_item = click_path
     '''
     Summary:
         If it has history it reverts back to previous path
@@ -125,6 +139,8 @@ class FileBrowserTv(QTreeView):
         menu = QMenu()
         action_new_folder = menu.addAction("New Folder")
         action_quit = menu.addAction("Quit")
+
+        action_new_folder.triggered.connect(self.create_new_folder_event)
         menu.exec_(self.viewport().mapToGlobal(position))
 
     '''
@@ -137,4 +153,10 @@ class FileBrowserTv(QTreeView):
         folder_name = name_dialog.get_folder_name()
         if folder_name is not None:
             create_new_folder(self.dir_path, folder_name)
+
+    def delete_items(self):
+        selected_indexes = self.selectionModel().selectedIndexes()
+        for index in selected_indexes:
+            self.model.remove(index)
+
     # endregion

@@ -1,6 +1,7 @@
 TODO 26. 6. 2021 (v0.1)
-- Create the check for the correct folder name
+- Create the check for the correct folder name (OK)
 - Set and create all the events on the main menu
+- Multiple selection on file browser
 - Set all events on the right click menu
     * New folder
     * New file

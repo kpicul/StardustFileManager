@@ -1,7 +1,9 @@
+from PyQt5.QtWidgets import QErrorMessage
 import os.path
 from os import mkdir
 from os.path import exists
 from pathlib import Path
+from shutil import copy, rmtree, move
 
 
 """
@@ -57,4 +59,29 @@ def create_new_folder(directory_path, folder_name):
         try:
             mkdir(new_path)
         except OSError as ose:
-            print(ose.strerror)
+            error_dialog = QErrorMessage()
+            error_dialog.showMessage("Error: " + ose.strerror)
+            error_dialog.exec_()
+
+def copy_item(original_path, copy_path):
+    try:
+        copy(original_path, copy_path)
+    except OSError as ose:
+        show_error_message(ose.strerror)
+
+def delete_item(path):
+    try:
+        rmtree(path)
+    except OSError as ose:
+        show_error_message(ose.strerror)
+
+def move_item(original_path, new_path):
+    try:
+        move(original_path, new_path)
+    except OSError as ose:
+        show_error_message(ose.strerror)
+
+def show_error_message(error_string):
+    error_dialog = QErrorMessage()
+    error_dialog.showMessage("Error: " + error_string)
+    error_dialog.exec_()
